@@ -13,9 +13,24 @@ app.use(express.json());
 app.use(cors());
 
 //database connection
-mongoose.connect(
-  "mongodb+srv://arpitchauhanac07:Arpitmahak07@cluster0.wkcugj3.mongodb.net/e-commerce"
-);
+const dbUri = process.env.MONGODB_URI || "mongodb+srv://arpitchauhanac07:Arpitmahak07@cluster0.wkcugj3.mongodb.net/e-commerce";
+
+const connectWithRetry = () => {
+  console.log('Attempting to connect to MongoDB...');
+  mongoose.connect(dbUri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("MongoDB connected");
+  })
+  .catch(err => {
+    console.error("MongoDB connection error:", err);
+    setTimeout(connectWithRetry, 5000); // Retry after 5 seconds
+  });
+};
+
+connectWithRetry();
 
 //api creation
 app.get("/", (req, res) => {
